@@ -261,9 +261,9 @@ $smtp = "mail.domain.com.au"
  
 $to = "$new_displayname <$EmailAddress>" 
 
-$Cc = "Rachel McAuliffe <rachel.mcauliffe@domain.com.au>"
+$Cc = "Email Address" <email.address@domain.com.au>"
  
-$from = "Rachel McAuliffe <rachel.mcauliffe@domain.com.au>" 
+$from = "Email Address" <email.address@domain.com.au>" 
  
 $subject = "Login Details"  
  
