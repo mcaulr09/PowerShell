@@ -1,20 +1,4 @@
-﻿#==========================================================================
-#
-# NAME: CopyTempADAccount.ps1
-#
-# AUTHOR: mcaulr09
-#
-#
-# SUMMARY:
-#
-# Powershell Script to copy and or create Temporary/Contractor Accounts 
-# by either copying entire account or manager's basic details.
-#
-# DESCRIPTION:
-#
-# Powershell Script to copy and or create Temporary/Contractor Accounts 
-# by creating a template of an existing user account to copy or the new 
-# staff member's line manager's account with basic attributes only (E.g. DLs)
+﻿
 
 #Import AD and Exchange
 Import-Module ActiveDirectory
@@ -30,10 +14,10 @@ $samaccount_to_copy = $vb::inputbox("Enter SAMAccount Name to Copy")
 $manageraccount = $vb::inputbox("Enter Manager SAMAccount Name")
 $new_displayname = $vb::inputbox("Enter Display Name of new user")
 $new_firstname = ($new_displayname.split(" ")[0])
-$new_lastname = ($new_displayname.Substring($new_displayname.IndexOf(" ") +1))
+$new_lastname = ($new_displayname.Substring($new_displayname.IndexOf(" ") + 1))
 $new_name = $new_displayname
-$CopyPath = $(try {(Get-AdUser $samaccount_to_copy).distinguishedName.Split(',',2)[1]} catch {$null})
-$ManagerPath = $(try {(Get-AdUser $manageraccount).distinguishedName.Split(',',2)[1]} catch {$null})
+$CopyPath = $(try {(Get-AdUser $samaccount_to_copy).distinguishedName.Split(',', 2)[1]} catch {$null})
+$ManagerPath = $(try {(Get-AdUser $manageraccount).distinguishedName.Split(',', 2)[1]} catch {$null})
 $enable_user_after_creation = $true
 $password_never_expires = $false
 $cannot_change_password = $false
@@ -43,13 +27,12 @@ $ad_account_manager = $(try {Get-ADUser $manageraccount -Properties Office, Offi
 ##### Generate Random Password from DinoPass # Credit to Chris Spencer
 $web = New-Object Net.WebClient #Generates powershell web client
 $web.Headers.Add("Cache-Control", "no-cache");
-$PwdString= $web.DownloadString("http://www.dinopass.com/password/simple")
-$PwdString = $PwdString.substring(0,1).toUpper() + $PwdString.substring(1)
+$PwdString = $web.DownloadString("http://www.dinopass.com/password/simple")
+$PwdString = $PwdString.substring(0, 1).toUpper() + $PwdString.substring(1)
 $Password = ConvertTo-SecureString -String $PwdString -AsPlainText -Force  
 
 ### If not using DinoPass ###
-Function random-password ($length = 8)
-{
+Function random-password ($length = 8) {
     $punc = 46..46
     $digits = 48..57
     $letters = 65..90 + 97..122
@@ -58,9 +41,9 @@ Function random-password ($length = 8)
     # https://blogs.technet.com/b/heyscriptingguy/archive/2012/01/07/use-pow
     $password = get-random -count $length `
         -input ($punc + $digits + $letters) |
-            % -begin { $aa = $null } `
-            -process {$aa += [char]$_} `
-            -end {$aa}
+        % -begin { $aa = $null } `
+        -process {$aa += [char]$_} `
+        -end {$aa}
 
     return $password
 }
@@ -70,23 +53,19 @@ Function random-password ($length = 8)
 #####Check accounts exist#####
 $User = $(try {Get-ADUser $samaccount_to_copy -Properties * | Select Name} catch {$null})
  
-If ($User -eq $Null)
-{
-   Write-Host "User doesn't Exist in AD"
+If ($User -eq $Null) {
+    Write-Host "User doesn't Exist in AD"
 }
-Else
-{
-   Write-Host "User found in AD"
+Else {
+    Write-Host "User found in AD"
 }
  
-$Manager = $(try {Get-ADUser $manageraccount -Properties * | Select Name} catch{$null})
+$Manager = $(try {Get-ADUser $manageraccount -Properties * | Select Name} catch {$null})
  
-If ($Manager -eq $Null)
-{
+If ($Manager -eq $Null) {
     "Manager doesn't Exist in AD"
 }
-Else
-{
+Else {
     "Manager found in AD"
 }
 
@@ -119,17 +98,17 @@ Else
 #} 
 
 ### Otherwise FirstName.LastName
-$new_samaccountname = ($new_displayname -replace " ",".")
+$new_samaccountname = ($new_displayname -replace " ", ".")
 
 ##### Check New User Exists #####
 
-$NewUser = $(try {Get-ADUser $new_samaccountname -Properties * | Select Name} catch{$null})
+$NewUser = $(try {Get-ADUser $new_samaccountname -Properties * | Select Name} catch {$null})
  
-If ($NewUser -eq $Null)
-{
+If ($NewUser -eq $Null) {
     "Username doesn't exist, creating user"
 
-}Else{
+}
+Else {
     "Username already exists, choosing next letter in sequence"
 }
 
@@ -142,70 +121,88 @@ Write-Host "Username will be $new_samaccountname"
 
 $HomeDir = $(try {Get-ADUser $samaccount_to_copy -Properties HomeDirectory} catch {$null}) |
 
-    Select-Object -ExpandProperty HomeDirectory |
+Select-Object -ExpandProperty HomeDirectory |
     Split-Path -Parent
-    "HomeDirectory will be $HomeDir"
+"HomeDirectory will be $HomeDir"
    
 #####Create account by copying user or user's manager's basic attributes#####
 
 $copy = if ($copy = $ad_account_to_copy ) {
-	# return copy
-	$copy
-} elseif($copy = $ad_account_manager ){
-	# return copy
-	$copy
-}else{
-	Write-Host 'No manager or user specified'
-	# cannot create user no copy returned
+    # return copy
+    $copy
+}
+elseif ($copy = $ad_account_manager ) {
+    # return copy
+    $copy
+}
+else {
+    Write-Host 'No manager or user specified'
+    # cannot create user no copy returned
 }
 
-$path = if($path = $CopyPath ) {
+$path = if ($path = $CopyPath ) {
     $path
-}elseif($path = $ManagerPath ){
+}
+elseif ($path = $ManagerPath ) {
     $path
-}else{
+}
+else {
     Write-Host 'No Path found'
 }
 
-if($copy){ 
-	New-ADUser -SamAccountName $new_samaccountname -Instance $copy -Name $new_name -DisplayName $new_displayname -GivenName $new_firstname -Surname $new_lastname -PasswordNeverExpires $password_never_expires -CannotChangePassword $cannot_change_password -EmailAddress ($new_firstname + '.' + $new_lastname + '@' + "domain.com.au") -Enabled $enable_user_after_creation -UserPrincipalName ($new_samaccountname + '@' + "domain.com.au") -AccountPassword (ConvertTo-SecureString -AsPlainText $Password -Force) -Path $path
-	# other changes
-}else{
-	Write-Host 'No account was specified.'
+if ($copy) { 
+    $Parameters = @{
+        'SamAccountName' =  $new_samaccountname 
+        'Instance' = $copy 
+        'Name' = $new_name 
+        'DisplayName' = $new_displayname 
+        'GivenName' = $new_firstname 
+        'Surname' = $new_lastname 
+        'PasswordNeverExpires' = $password_never_expires 
+        'CannotChangePassword' = $cannot_change_password 
+        'EmailAddress' = ($new_firstname + '.' + $new_lastname + '@' + "domain.com.au") 
+        'Enabled' = $enable_user_after_creation 
+        'UserPrincipalName' = ($new_samaccountname + '@' + "domain.com.au") 
+        'AccountPassword' = (ConvertTo-SecureString -AsPlainText $Password -Force) 
+        'Path' = $path
+    # other changes   
+            }
+New-ADUser @Parameters
+}
+else {
+    Write-Host 'No account was specified.'
 }
 
 ## Mirror all the groups of original account that is a member of or only copy Distribution Lists
 #Option 1
 
-If ($samaccount_to_copy) 
-{
-$UserGroups =@()
-$UserGroups = (Get-ADUser -Identity $samaccount_to_copy -Properties MemberOf).MemberOf
-foreach ($Group in $UserGroups) {
-    Add-ADGroupMember -Identity $Group -Members $new_samaccountname
-}
-(Get-ADUser -Identity $new_samaccountname -Properties MemberOf).MemberOf
+If ($samaccount_to_copy) {
+    $UserGroups = @()
+    $UserGroups = (Get-ADUser -Identity $samaccount_to_copy -Properties MemberOf).MemberOf
+    foreach ($Group in $UserGroups) {
+        Add-ADGroupMember -Identity $Group -Members $new_samaccountname
+    }
+    (Get-ADUser -Identity $new_samaccountname -Properties MemberOf).MemberOf
 } 
-Else 
-{
+Else {
     
     ($manageraccount)
     Write-Host "Please Add Group Memberships Manually" 
-#
-#    ForEach ($Group in Get-DistributionGroup) 
-#{ 
-#   ForEach ($Member in Get-DistributionGroupMember -identity $Group.Name | Where { $_.Name –eq $manageraccount }) 
-#   { 
-#      $Group.name 
-#   } 
-#}
-#Add-DistributionGroupMember -Identity $Group.Name -Member $new_samaccountname -verbose
-    }
+    #
+    #    ForEach ($Group in Get-DistributionGroup) 
+    #{ 
+    #   ForEach ($Member in Get-DistributionGroupMember -identity $Group.Name | Where { $_.Name –eq $manageraccount }) 
+    #   { 
+    #      $Group.name 
+    #   } 
+    #}
+    #Add-DistributionGroupMember -Identity $Group.Name -Member $new_samaccountname -verbose
+}
 
 #Option 2 (Copies all groups filtered by ones only in specified OU (Distribution Groups)
 
-    #Get-ADPrincipalGroupMembership -Identity $manageraccount | 
-    #Where-Object {$_.DistinguishedName -match 'OU=Distribution Groups,OU=PRG,DC=iwf,DC=com,DC=au'}
+#Get-ADPrincipalGroupMembership -Identity $manageraccount | 
+#Where-Object {$_.DistinguishedName -match 'OU=Distribution Groups,OU=PRG,DC=iwf,DC=com,DC=au'}
 #}
 
 ##### Confirm new account created
@@ -245,7 +242,7 @@ $EmailAddress = Get-ADUser $new_samaccountname -Properties mail | Select-Object 
 ### Copy Mailbox Access ###
 $Mailboxes = Get-Mailbox -resultsize "Unlimited" | Get-MailboxPermission | where { ($_.AccessRights -eq "FullAccess") -and ($_.User -like "Domain\$samaccount_to_copy") -and ($_.IsInherited -eq $false) }
 ForEach ($mailbox in $mailboxes) {
-$mailbox | Add-MailboxPermission -user Domain\$new_samaccountname -AccessRights "FullAccess"
+    $mailbox | Add-MailboxPermission -user Domain\$new_samaccountname -AccessRights "FullAccess"
 }
 
 #### Confirm mailbox access granted ###
@@ -261,9 +258,9 @@ $smtp = "mail.domain.com.au"
  
 $to = "$new_displayname <$EmailAddress>" 
 
-$Cc = "Email Address" <email.address@domain.com.au>"
+$Cc = "Rachel McAuliffe <rachel.mcauliffe@domain.com.au>"
  
-$from = "Email Address" <email.address@domain.com.au>" 
+$from = "Rachel McAuliffe <rachel.mcauliffe@domain.com.au>" 
  
 $subject = "Login Details"  
  
