@@ -24,7 +24,7 @@ $datestamp = ((Get-Date).ToString('dd-MM-yyyy'))
 
 ### Check if user exists ###
 
-$User = $(try {Get-ADUser $samaccount_to_disable -Properties SamAccountName,Name,distinguishenName,EmailAddress,Manager | Select-Object SamAccountName,Name,distinguishedName} catch {$null})
+$User = $(try {Get-ADUser $samaccount_to_disable -Properties SamAccountName,Name,distinguishenName,EmailAddress,Manager} catch {$null})
 
 If ($User -eq $Null) {
     Write-Host "User doesn't Exist in AD, Please run script again"
