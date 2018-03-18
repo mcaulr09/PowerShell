@@ -55,22 +55,26 @@ $Password = ConvertTo-SecureString -String $PwdString -AsPlainText -Force
 #$Password = random-password
 
 #####Check accounts exist#####
-$User = $(try {Get-ADUser $samaccount_to_copy -Properties * | Select-Object Name} catch {$null})
+$User = $ad_account_to_copy
  
-If ($User -eq $Null) {
-    Write-Host "User doesn't Exist in AD"
+If ($User -eq $Null) 
+{
+    Write-Host  -ForegroundColor Red "User doesn't Exist in AD"
 }
-Else {
-    Write-Host "User found in AD"
+Else 
+{
+    Write-Host -ForegroundColor Green "User found in AD"
 }
  
-$Manager = $(try {Get-ADUser $manageraccount -Properties * | Select-Object Name} catch {$null})
+$Manager = $ad_account_manager
  
-If ($Manager -eq $Null) {
-    "Manager doesn't Exist in AD"
+If ($Manager -eq $Null) 
+{
+    Write-Host  -ForegroundColor Red "Manager doesn't Exist in AD"
 }
-Else {
-    "Manager found in AD"
+Else 
+{
+    Write-Host -ForegroundColor Green "Manager found in AD"
 }
 
 ##### Generate Username - FirstInitialLastName
@@ -104,6 +108,9 @@ Else {
 ### Otherwise FirstName.LastName
 $new_samaccountname = ($new_displayname -replace " ", ".")
 
+##### Set Username #####
+#$new_samaccountname = Generate-username -firstname $new_firstName -lastname $new_lastname
+
 ##### Check New User Exists #####
 
 $NewUser = $(try {Get-ADUser $new_samaccountname -Properties * | Select-Object Name} catch {$null})
@@ -115,9 +122,6 @@ If ($NewUser -eq $Null) {
 Else {
     "Username already exists, choosing next letter in sequence"
 }
-
-##### Set Username #####
-$new_samaccountname = Generate-username -firstname $new_firstName -lastname $new_lastname
 
 Write-Host "Username will be $new_samaccountname"
 
