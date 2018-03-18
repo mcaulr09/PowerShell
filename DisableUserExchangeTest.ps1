@@ -72,17 +72,17 @@ Else {
 
 ### Get Current OU and split it to the site name. ###
 
-$CurrentOU = ($User).distinguishedName.Split(',')[3].substring(0)
+#$CurrentOU = ($User).distinguishedName.Split(',')[3].substring(0)
 
 ### Disabled OU ###
-$DisabledOU = "OU=Disabled Users, DC=domain,Dc=com,DC=au"
+$DisabledOU = "OU=Disabled Users,DC=domain,Dc=com,DC=au"
 
 ### If multiple Disabled Users OUs as per AD Structure ###
 
-$Site1OU = "OU=Disabled Users,OU=Users,OU=Site1,DC=domain,DC=com,DC=au"
-$Site2OU = "OU=Disabled Users,OU=Site2,DC=domain,DC=com,DC=au"
-$Site3OU = "OU=Disabled Users,OU=Site3,DC=domain,DC=com,DC=au"
-$Site4OU = "OU=Disabled Users,OU=Site4,DC=domain,DC=com,DC=au"
+#$Site1OU = "OU=Disabled Users,OU=Users,OU=Site1,DC=domain,DC=com,DC=au"
+#$Site2OU = "OU=Disabled Users,OU=Site2,DC=domain,DC=com,DC=au"
+#$Site3OU = "OU=Disabled Users,OU=Site3,DC=domain,DC=com,DC=au"
+#$Site4OU = "OU=Disabled Users,OU=Site4,DC=domain,DC=com,DC=au"
 
 #switch -Wildcard ($CurrentOU) { 
 #    "*Site1*" { $DisableOU = $Site1OU; break }
@@ -95,25 +95,25 @@ $Site4OU = "OU=Disabled Users,OU=Site4,DC=domain,DC=com,DC=au"
 
 ### Determine OU user is in and which Disabled Users OU to move them to ##
 
-If ($CurrentOU -like "*OU=Site1*") {
-    $DisabledOU = $Site1OU
-    $DisabledOU
-}
-Elseif ($CurrentOU -like "*OU=Site2*") {
-    $DisabledOU = $Site2OU
-    $DisabledOU
-}
-Elseif ($CurrentOU -like "*OU=Site3*") {
-    $DisabledOU = $Site3OU
-    $DisabledOU
-}
-Elseif ($CurrentOU -like "*OU=Site4*") {
-    $DisabledOU = $Site4OU
-    $DisabledOU
-}
-Else {
-    "Path Not Found"
-}
+#If ($CurrentOU -like "*OU=Site1*") {
+#    $DisabledOU = $Site1OU
+#    $DisabledOU
+#}
+#Elseif ($CurrentOU -like "*OU=Site2*") {
+#    $DisabledOU = $Site2OU
+#    $DisabledOU
+#}
+#Elseif ($CurrentOU -like "*OU=Site3*") {
+#    $DisabledOU = $Site3OU
+#    $DisabledOU
+#}
+#Elseif ($CurrentOU -like "*OU=Site4*") {
+#    $DisabledOU = $Site4OU
+#    $DisabledOU
+#}
+#Else {
+#    "Path Not Found"
+#}
 
 ### Move User to Disabled Users OU ###
 $User | Move-ADObject -TargetPath $DisabledOU

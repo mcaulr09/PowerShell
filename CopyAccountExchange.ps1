@@ -329,26 +329,26 @@ $PwdString = $PwdString.substring(0, 1).toUpper() + $PwdString.substring(1)
 $Password = ConvertTo-SecureString -String $PwdString -AsPlainText -Force  
 
 ### If not using DinoPass ###
-Function random-password ($length = 8) {
-    $punc = 46..46
-    $digits = 48..57
-    $letters = 65..90 + 97..122
+#Function random-password ($length = 8) {
+#    $punc = 46..46
+#    $digits = 48..57
+#    $letters = 65..90 + 97..122
 
     # Thanks to
     # https://blogs.technet.com/b/heyscriptingguy/archive/2012/01/07/use-pow
-    $password = get-random -count $length `
-        -input ($punc + $digits + $letters) |
-        % -begin { $aa = $null } `
-        -process {$aa += [char]$_} `
-        -end {$aa}
-
-    return $password
-}
+#    $password = get-random -count $length `
+#        -input ($punc + $digits + $letters) |
+#        % -begin { $aa = $null } `
+#        -process {$aa += [char]$_} `
+#        -end {$aa}
+#
+#    return $password
+#}
 
 #$Password = random-password
 
 #####Check accounts exist#####
-$User = $(try {Get-ADUser $samaccount_to_copy -Properties * | Select Name} catch {$null})
+$User = $(try {Get-ADUser $samaccount_to_copy -Properties * | Select-Object Name} catch {$null})
  
 If ($User -eq $Null) {
     Write-Host "User doesn't Exist in AD"
@@ -357,7 +357,7 @@ Else {
     Write-Host "User found in AD"
 }
  
-$Manager = $(try {Get-ADUser $manageraccount -Properties * | Select Name} catch {$null})
+$Manager = $(try {Get-ADUser $manageraccount -Properties * | Select-Object Name} catch {$null})
  
 If ($Manager -eq $Null) {
     "Manager doesn't Exist in AD"
@@ -399,7 +399,7 @@ $new_samaccountname = ($new_displayname -replace " ", ".")
 
 ##### Check New User Exists #####
 
-$NewUser = $(try {Get-ADUser $new_samaccountname -Properties * | Select Name} catch {$null})
+$NewUser = $(try {Get-ADUser $new_samaccountname -Properties * | Select-Object Name} catch {$null})
  
 If ($NewUser -eq $Null) {
     "Username doesn't exist, creating user"
@@ -503,16 +503,13 @@ Else {
 #}
 
 ##### Confirm new account created
-
 Get-ADUser $new_samaccountname
 
 #### Set Home Directory Path #####
 Set-ADUser -Identity $new_samaccountname -HomeDirectory $HomeDirectory -HomeDrive H
 
 ##### Clear and Set manager #####
-
 Set-ADUser $new_samaccountname -Manager $null
-
 Set-ADUser $new_samaccountname -Manager $manageraccount
 
 ### Set EmployeeID and Account Expirey if not set
@@ -537,17 +534,16 @@ Enable-Mailbox $new_samaccountname
 $EmailAddress = Get-ADUser $new_samaccountname -Properties mail | Select-Object -ExpandProperty mail
 
 ### Copy Mailbox Access ###
-$Mailboxes = Get-Mailbox -resultsize "Unlimited" | Get-MailboxPermission | where { ($_.AccessRights -eq "FullAccess") -and ($_.User -like "Domain\$samaccount_to_copy") -and ($_.IsInherited -eq $false) }
+$Mailboxes = Get-Mailbox -resultsize "Unlimited" | Get-MailboxPermission | Where-Object { ($_.AccessRights -eq "FullAccess") -and ($_.User -like "Domain\$samaccount_to_copy") -and ($_.IsInherited -eq $false) }
 ForEach ($mailbox in $mailboxes) {
     $mailbox | Add-MailboxPermission -user Domain\$new_samaccountname -AccessRights "FullAccess"
 }
 
 #### Confirm mailbox access granted ###
-Get-Mailbox -resultsize "Unlimited" | Get-MailboxPermission | where { ($_.AccessRights -eq "FullAccess") -and ($_.User -like "Domain\$new_samaccountname") -and ($_.IsInherited -eq $false) }
+Get-Mailbox -resultsize "Unlimited" | Get-MailboxPermission | Where-Object { ($_.AccessRights -eq "FullAccess") -and ($_.User -like "Domain\$new_samaccountname") -and ($_.IsInherited -eq $false) }
 
 ##### Send Account Details #####
-
-$ManagerName = Get-ADUser $manageraccount -Properties Name | Select Name
+$ManagerName = Get-ADUser $manageraccount -Properties Name | Select-Object Name
 
 ##### Send Account Details #####
 
