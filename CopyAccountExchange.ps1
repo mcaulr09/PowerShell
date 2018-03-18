@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-﻿<#
+﻿﻿<#
     .Synopsis
         Create User Account and Mailbox in Exchange
     .Description
@@ -573,4 +572,3 @@ $body += "<b>Email Address:</b> $EmailAddress <br>"
 #### Now send the email using \> Send-MailMessage  
  
 send-MailMessage -SmtpServer $smtp -To $to -Cc $Cc -From $from -Subject $subject -Body $body -BodyAsHtml -Priority high 
->>>>>>> 9543955e5800114e65173d066837a34bddd57161
