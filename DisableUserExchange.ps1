@@ -17,7 +17,6 @@ $vb = [Microsoft.VisualBasic.Interaction]
 
 ### Variables ###
 $samaccount_to_disable = $vb::inputbox("Enter SAMAccount Name to Disable")
-$DisplayName = ($samaccount_to_disable).Name
 $Ticket_Number = $vb::inputbox("Enter Ticket Number")
 $logpath = "\\server\c$\Temp\DisabledUsersTest\ "
 $logfile = $logpath + "\$samaccount_to_disable.txt"
@@ -25,7 +24,7 @@ $datestamp = ((Get-Date).ToString('dd-MM-yyyy'))
 
 ### Check if user exists ###
 
-$User = $(try {Get-ADUser $samaccount_to_disable -Properties Name, EmailAddress, Manager | Select-Object Name} catch {$null})
+$User = $(try {Get-ADUser $samaccount_to_disable -Properties SamAccountName,Name,distinguishenName,EmailAddress,Manager | Select-Object SamAccountName,Name,distinguishedName} catch {$null})
 
 If ($User -eq $Null) {
     Write-Host "User doesn't Exist in AD, Please run script again"
@@ -36,7 +35,7 @@ Else {
 
 ### Get Manager ###
 
-$Manager = $(try {(Get-ADUser (Get-ADUser $samaccount_to_disable -Properties manager).manager).SamAccountName} catch {$null})
+$Manager = $(try {(Get-ADUser $User.manager).SamAccountName} catch {$null})
 $ManagerEmail = $Manager.mail
 If ($Manager -eq $Null) {
     Write-Host "No Manager set,"
@@ -72,17 +71,17 @@ Else {
 
 ### Get Current OU and split it to the site name. ###
 
-$CurrentOU = ($samaccount_to_disable).distinguishedName.Split(',')[3].substring(0)
+#$CurrentOU = ($User).distinguishedName.Split(',')[3].substring(0)
 
 ### Disabled OU ###
 $DisabledOU = "OU=Disabled Users,DC=domain,Dc=com,DC=au"
 
 ### If multiple Disabled Users OUs as per AD Structure ###
 
-$Site1OU = "OU=Disabled Users,OU=Users,OU=Site1,DC=domain,DC=com,DC=au"
-$Site2OU = "OU=Disabled Users,OU=Site2,DC=domain,DC=com,DC=au"
-$Site3OU = "OU=Disabled Users,OU=Site3,DC=domain,DC=com,DC=au"
-$Site4OU = "OU=Disabled Users,OU=Site4,DC=domain,DC=com,DC=au"
+#$Site1OU = "OU=Disabled Users,OU=Users,OU=Site1,DC=domain,DC=com,DC=au"
+#$Site2OU = "OU=Disabled Users,OU=Site2,DC=domain,DC=com,DC=au"
+#$Site3OU = "OU=Disabled Users,OU=Site3,DC=domain,DC=com,DC=au"
+#$Site4OU = "OU=Disabled Users,OU=Site4,DC=domain,DC=com,DC=au"
 
 #switch -Wildcard ($CurrentOU) { 
 #    "*Site1*" { $DisableOU = $Site1OU; break }
@@ -95,36 +94,36 @@ $Site4OU = "OU=Disabled Users,OU=Site4,DC=domain,DC=com,DC=au"
 
 ### Determine OU user is in and which Disabled Users OU to move them to ##
 
-If ($CurrentOU -like "*OU=Site1*") {
-    $DisabledOU = $Site1OU
-    $DisabledOU
-}
-Elseif ($CurrentOU -like "*OU=Site2*") {
-    $DisabledOU = $Site2OU
-    $DisabledOU
-}
-Elseif ($CurrentOU -like "*OU=Site3*") {
-    $DisabledOU = $Site3OU
-    $DisabledOU
-}
-Elseif ($CurrentOU -like "*OU=Site4*") {
-    $DisabledOU = $Site4OU
-    $DisabledOU
-}
-Else {
-    "Path Not Found"
-}
+#If ($CurrentOU -like "*OU=Site1*") {
+#    $DisabledOU = $Site1OU
+#    $DisabledOU
+#}
+#Elseif ($CurrentOU -like "*OU=Site2*") {
+#    $DisabledOU = $Site2OU
+#    $DisabledOU
+#}
+#Elseif ($CurrentOU -like "*OU=Site3*") {
+#    $DisabledOU = $Site3OU
+#    $DisabledOU
+#}
+#Elseif ($CurrentOU -like "*OU=Site4*") {
+#    $DisabledOU = $Site4OU
+#    $DisabledOU
+#}
+#Else {
+#    "Path Not Found"
+#}
 
 ### Move User to Disabled Users OU ###
-$samaccount_to_disable | Move-ADObject -TargetPath $DisabledOU
+$User | Move-ADObject -TargetPath $DisabledOU
 
 ### Hide from Global Address List
 Set-Mailbox -Identity $samaccount_to_disable -HiddenFromAddressListsEnabled $true
 
 ### Forward Email ###
 If ($Manager -eq $Null) {
-    Set-Mailbox -Identity "$DisplayName" -ForwardingSMTPAddress "$mailbox_to_forward_email"
+    Set-Mailbox -Identity "$User" -ForwardingSMTPAddress "$mailbox_to_forward_email"
 }
 Else {
-    Set-Mailbox Identity "$DisplayName" -ForwardingSMTPAddress $ManagerEmail
+    Set-Mailbox Identity "$User" -ForwardingSMTPAddress $ManagerEmail
 }   
