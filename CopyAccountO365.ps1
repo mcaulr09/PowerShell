@@ -1,4 +1,4 @@
-<##>
+<#
     .Synopsis
         Create User Account and Mailbox in Exchange
     .Description
