@@ -1,4 +1,4 @@
-﻿﻿<#
+<#
     .Synopsis
         Create User Account and Mailbox in Exchange
     .Description
@@ -167,27 +167,23 @@ else {
 }
 
 if ($copy) 
-{ 
-    $Parameters = @{
-        'SamAccountName' =  $new_samaccountname 
-        'Instance' = $copy 
-        'Name' = $new_name 
-        'DisplayName' = $new_displayname 
-        'GivenName' = $new_firstname 
-        'Surname' = $new_lastname 
-        'PasswordNeverExpires' = $password_never_expires 
-        'CannotChangePassword' = $cannot_change_password 
-        'EmailAddress' = ($new_firstname + '.' + $new_lastname + '@' + "domain.com.au") 
-        'Enabled' = $enable_user_after_creation 
-        'UserPrincipalName' = ($new_samaccountname + '@' + "domain.com.au") 
-        'AccountPassword' = (ConvertTo-SecureString -AsPlainText $Password -Force) 
-        'Path' = $path
-      
-                }
-New-ADUser @Parameters
-}
-else 
 {
+New-ADUser -SamAccountName $new_samaccountname `
+    -Instance $copy`
+    -Name $new_name `
+    -DisplayName $new_displayname `
+    -GivenName $new_firstname `
+    -Surname $new_lastname `
+    -PasswordNeverExpires  $password_never_expires `
+    -CannotChangePassword  $cannot_change_password `
+    -EmailAddress  ($new_firstname + '.' + $new_lastname + '@' + "domain.com.au") `
+    -Enabled  $enable_user_after_creation `
+    -UserPrincipalName ($new_samaccountname + '@' + "domain.com.au") `
+    -AccountPassword $Password `
+    -Path $Path
+}
+Else 
+{   
     Write-Host -ForegroundColor Red "No account was specified."
 }
 

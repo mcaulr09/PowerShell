@@ -1,0 +1,1 @@
+﻿$Users = Get-ADUser -Filter * -SearchBase "OU=Test,DC=mcauliffe-systems,DC=com" -Properties EmployeeID,AccountExpirationdate |     Where{ $_.EmployeeID -eq $null -or $_.AccountExpirationDate -ne $null}      $Users | Select SAMAccountName, EmployeeID,AccountExpirationDate
