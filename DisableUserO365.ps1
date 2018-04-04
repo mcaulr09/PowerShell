@@ -4,6 +4,7 @@
     .Description
         Copies User Account if specified and creates mailbox and sets attributes such as manager, ProxyAddress etc
      .Example
+     .\DisableUser.ps1
 #>    
 
 Import-Module ActiveDirectory
@@ -59,15 +60,37 @@ Set-ADUser $samaccount_to_disable -Description  "Disabled by Denver - $Ticket_Nu
 $User | Move-ADObject -TargetPath $DisableOU
 
 ### Get Distribution Groups ###
-$groups = $samaccount_to_disable.memberof | Select-Object -ExpandProperty memberof
-foreach ($group in $groups) {
-    if ((Get-ADGroup $group).groupcategory -like "*distribution*") {
-        Remove-ADGroupMember -Identity $group -Members $samaccount_to_disable -Confirm:$false
-    }
-    Else {
-        Write-Host "Please remove groups manually"
+$Group_Memberships = Get-ADPrincipalGroupMembership -Identity $samaccount_to_disable  | Where-Object { $_.Name -notcontains "Domain Users" }
+
+    If ($Group_Memberships -ne $null)
+
+    {
+
+    foreach($group in $Group_Memberships){
+
+    if((Get-ADGroup $group).groupcategory -like "*distribution*")
+        {
+    
+    # Remove each group membership from the user
+
+    Write-Host -ForegroundColor Yellow    "Removing user from $($group.name) "
+
+    $Group_Memberships | Remove-ADGroupMember -Members $samaccount_to_disable
+
+    Write-Host -ForegroundColor Green "$($group.name) Removed"
+
+        }
     }
 }
+   Else
+
+    {
+
+    Write-Host -ForegroundColor Red "Group Membership still exist please remove manually"
+
+}
+
+Write-Host -ForegroundColor Yellow "Connecting to Exchange Online"
 
 ### Connect to Exchange Online ###
 $UserCredential = Get-Credential

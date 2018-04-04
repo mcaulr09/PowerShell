@@ -28,6 +28,18 @@ $cannot_change_password = $false
 $ad_account_to_copy = $(try {Get-ADUser $samaccount_to_copy -Properties Description, Office, OfficePhone, StreetAddress, City, State, PostalCode, Country, Title, Company, Department, Manager, EmployeeID} catch {$null})
 $ad_account_manager = $(try {Get-ADUser $manageraccount -Properties Office, OfficePhone, StreetAddress, City, State, PostalCode, Country, Company, Department} catch {$null})
 
+### If not copying an Account ### `
+$description = $vb::inputbox("Enter Description")
+$office = $vb::inputbox("Enter Office")
+$Company = $vb::inputbox("Enter Company")
+$Department = $vb::inputbox("Enter Department")
+$Title = $vb::inputbox("Enter Title")
+$StreetAddress = $vb::inputbox("Enter Street Address")
+$State = $vb::inputbox("Enter State")
+$city = $vb::inputbox("Enter City")
+$PostCode = $vb::inputbox("Enter PostCode")
+$Country = $vb::inputbox("Enter Country")
+
 ##### Generate Random Password from DinoPass
 $web = New-Object Net.WebClient #Generates powershell web client
 $web.Headers.Add("Cache-Control", "no-cache");
@@ -151,28 +163,39 @@ else {
 }
 
 if ($copy) { 
-    $Parameters = @{
-        'SamAccountName' =  $new_samaccountname 
-        'Instance' = $copy 
-        'Name' = $new_name 
-        'DisplayName' = $new_displayname 
-        'GivenName' = $new_firstname 
-        'Surname' = $new_lastname 
-        'PasswordNeverExpires' = $password_never_expires 
-        'CannotChangePassword' = $cannot_change_password 
-        'EmailAddress' = ($new_firstname + '.' + $new_lastname + '@' + "domain.com.au") 
-        'Enabled' = $enable_user_after_creation 
-        'UserPrincipalName' = ($new_samaccountname + '@' + "domain.com.au") 
-        'AccountPassword' = (ConvertTo-SecureString -AsPlainText $Password -Force) 
-        'Path' = $path
-    # other changes   
-            }
-New-ADUser @Parameters
+New-ADUser -SamAccountName $new_samaccountname `
+    -Instance $copy`
+    -Name $new_name `
+    -DisplayName $new_displayname `
+    -GivenName $new_firstname `
+    -Surname $new_lastname `
+    -PasswordNeverExpires  $password_never_expires `
+    -CannotChangePassword  $cannot_change_password `
+    -EmailAddress  ($new_firstname + '.' + $new_lastname + '@' + "domain.com.au") `
+    -Enabled  $enable_user_after_creation `
+    -UserPrincipalName ($new_samaccountname + '@' + "domain.com.au") `
+    -AccountPassword $Password `
+    -Path $Path
 }
-else {
-    Write-Host 'No account was specified.'
-}
-
+elseif ($manageraccount) {
+    New-ADUser -SamAccountName $new_samaccountname `
+    -Instance $copy`
+    -Name $new_name `
+    -DisplayName $new_displayname `
+    -GivenName $new_firstname `
+    -Surname $new_lastname `
+    -PasswordNeverExpires  $password_never_expires `
+    -CannotChangePassword  $cannot_change_password `
+    -EmailAddress  ($new_firstname + '.' + $new_lastname + '@' + "domain.com.au") `
+    -Enabled  $enable_user_after_creation `
+    -UserPrincipalName ($new_samaccountname + '@' + "domain.com.au") `
+    -AccountPassword $Password `
+    -Path $Path
+    }
+else
+    {
+    Write-Host -ForegroundColor Red "No account was specified."
+    }
 ##### Confirm new account created
 
 Get-ADUser $new_samaccountname

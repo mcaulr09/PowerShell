@@ -27,32 +27,34 @@ $datestamp = ((Get-Date).ToString('dd-MM-yyyy'))
 $User = $(try {Get-ADUser $samaccount_to_disable -Properties SamAccountName,Name,distinguishenName,EmailAddress,Manager} catch {$null})
 
 If ($User -eq $Null) {
-    Write-Host "User doesn't Exist in AD, Please run script again"
+    Write-Host -ForegroundColor Red "User to copy doesn't Exist in AD, Please run script again"
 }
 Else {
-    Write-Host "User found in AD, Continuing"
+    Write-Host -ForegroundColor Green "User to copy found in AD, Continuing"
 }
 
 ### Get Manager ###
 
-$Manager = $(try {(Get-ADUser $User.manager).SamAccountName} catch {$null})
-$ManagerEmail = $Manager.mail
+$Manager = $(try {(Get-ADUser (Get-ADUser $samaccount_to_disable -Properties manager).manager)} catch {$null})
+$ManagerName = $Manager.Name
+$ManagerAccount = $Manager.SamaccountName
 If ($Manager -eq $Null) {
-    Write-Host "No Manager set,"
+    Write-Host -ForegroundColor Red "No Manager set,"
     $samaccount_to_forward_email = $vb::inputbox("Enter SAMAccount Name to forward email to")
 }
 Else {
-    Write-Host "Manager set, Continuing"
+    Write-Host -ForegoundColor Green "Manager set, Continuing"
 }
 
 ### Disable User
-
 Disable-ADAccount $samaccount_to_disable
 Write-Host -ForegroundColor Yellow "Disabling Account..."
 
-### Backup group memberships to text file ###
+### Set Description ###
+Set-ADUser $samaccount_to_disable -Description "Disabled by - $datestamp - $Ticket_Number"
 
-"Disabled by Name " + $datestamp + " $Ticket_Number " | Out-File $logfile -append
+### Backup group memberships to text file ###
+"Disabled by  " + $datestamp + " $Ticket_Number " | Out-File $logfile -append
 $Group_MembershipNames = $Group_Memberships = Get-ADPrincipalGroupMembership -Identity $samaccount_to_disable | Select-Object Name | Out-File $logfile -Append
 $Group_Memberships = Get-ADPrincipalGroupMembership -Identity $samaccount_to_disable  | Where-Object { $_.Name -notcontains "Domain Users" }
 If ($Group_Memberships -ne $null) {
@@ -66,8 +68,6 @@ If ($Group_Memberships -ne $null) {
 Else {
     Write-Host -ForegroundColor Red "Group Membership still exist please remove manually"
 }
-
-
 
 ### Get Current OU and split it to the site name. ###
 
@@ -111,19 +111,50 @@ $DisabledOU = "OU=Disabled Users,DC=domain,Dc=com,DC=au"
 #    $DisabledOU
 #}
 #Else {
-#    "Path Not Found"
+#    Write-Host -ForegroundColor Red "Path Not Found"
 #}
 
 ### Move User to Disabled Users OU ###
+Write-Host -ForegroundColor Yellow "Moving to Disabled Users OU"
 $User | Move-ADObject -TargetPath $DisabledOU
 
 ### Hide from Global Address List
+Write-Host -ForegroundColor Yellow "Hiding from Global Addres List"
 Set-Mailbox -Identity $samaccount_to_disable -HiddenFromAddressListsEnabled $true
 
 ### Forward Email ###
-If ($Manager -eq $Null) {
-    Set-Mailbox -Identity "$User" -ForwardingSMTPAddress "$mailbox_to_forward_email"
+If ($Manager -ne $Null) {
+    $ManagerEmail = Get-ADUser $Manager -Properties Mail | Select Mail
+    Set-Mailbox -Identity "$DisplayName" -ForwardingSMTPAddress "$ManagerEmail"    
 }
-Else {
-    Set-Mailbox Identity "$User" -ForwardingSMTPAddress $ManagerEmail
-}   
+Elseif {
+    Set-Mailbox -Identity "$User" -ForwardingSMTPAddress "$mailbox_to_forward_email"
+    }
+Else
+{
+Write-Host ForgroundColor Red "Emails not forwarded please contact Manager"    
+}
+
+##### Send Account Details #####
+
+
+#$smtp = "mail.domain.com.au"
+
+#$to = "$ManagerName <$ManagerAccount@domain.com.au>" 
+
+#$From = "Display Name <Name.Name@domain.com.au>"
+
+#$Cc = "John Bolton <John.Bolton@domain.com.au>"
+
+#$Bcc = "Rachel McAuliffe <Rachel.McAuliffe@domain.com.au>"
+
+#$subject = " Re: $TicketNumber - $DisplayName Account Disabled"  
+ 
+#$body = "Dear <b><font color=red>$ManagerName</b></font> <br><br>" 
+
+#$body += "Kind Regards, <br>"
+#$body += "Name Name <br><br>"
+
+#### Now send the email using Send-MailMessage  
+ 
+#send-MailMessage -SmtpServer $smtp -To $to -Bcc $Bcc -From $from -Subject $subject -Body $body -BodyAsHtml -Priority High 

@@ -28,7 +28,7 @@ $Variables = @($samaccount_to_copy,`
                $ad_account_to_copy,`
                $ad_account_manager)
                }
-
+$Variables
 Function DinoPassPassword
 {
 $web = New-Object Net.WebClient #Generates powershell web client
