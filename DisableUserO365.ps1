@@ -54,7 +54,7 @@ Else {
 Disable-ADAccount $samaccount_to_disable
 
 ### Set Discription ###
-Set-ADUser $samaccount_to_disable -Description  "Disabled by Denver - $Ticket_Number - $datestamp"
+Set-ADUser $samaccount_to_disable -Description  "Disabled by IT Person - $Ticket_Number - $datestamp"
 
 ### Move User to Disabled Users OU ###
 $User | Move-ADObject -TargetPath $DisableOU
