@@ -1,4 +1,4 @@
-﻿$destination = "\\qnap-451\MCAULR09"
+﻿$destination = "\\qnap-451\MCAULR09\"
 
 $folder = "Desktop",
 "Downloads",
@@ -13,22 +13,42 @@ $folder = "Desktop",
 
 ###############################################################################################################
 
-$username = gc env:username
-$userprofile = gc env:userprofile
-$appData = gc env:localAPPDATA
+$username = $env:username
+$userprofile = $env:userprofile
+$appData = $env:localAPPDATA
 
-([IO.Directory]::Exists($destination + "\" + "Profile" + "\"))
+$backupfolder = Join-Path $destination "Profile\"
+
+$TestPath = Test-Path $backupfolder
+if ($TestPath -eq $false)
+{
+    New-Item $backupfolder
+    }
+Else
+{
 
 ###### Backup Data section ########
-	write-host -ForegroundColor green "Backing up data from local machine for $username"
 	
 	foreach ($f in $folder)
 	{	
-		$currentLocalFolder = $userprofile + "\" + $f
-		$currentRemoteFolder = $destination + "\" + "Profile" + "\" + $f
-		$currentFolderSize = (Get-ChildItem -ErrorAction silentlyContinue $currentLocalFolder -Recurse -Force | Measure-Object -ErrorAction silentlyContinue -Property Length -Sum ).Sum / 1MB
-		$currentFolderSizeRounded = [System.Math]::Round($currentFolderSize)
-		write-host -ForegroundColor cyan "  $f... ($currentFolderSizeRounded MB)"
-		robocopy $currentLocalFolder $currentRemoteFolder /S /E /XO
+		$currentLocalFolder = $userprofile + $f
+		$currentRemoteFolder = $backupfolder + $f
+
+$GCI_Params = @{
+    ErrorAction = 'silentlyContinue'
+    Path = $currentLocalFolder
+    Recurse = $True
+    Force = $True
+    }
+$MO_Params = @{
+    ErrorAction = 'silentlyContinue'
+    Property = 'Length'
+    Sum = $True
+    }
+$currentFolderSize = (Get-ChildItem @GCI_Params |
+    Measure-Object @MO_Params ).
+    Sum / 1MB
+		robocopy $currentLocalFolder $currentRemoteFolder /E /XO /NP
 	}
+}
 	
