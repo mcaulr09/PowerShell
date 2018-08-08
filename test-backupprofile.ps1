@@ -8,8 +8,7 @@ $folder = "Desktop",
 "Pictures",
 "Videos",
 "AppData\Local\Mozilla",
-"AppData\Local\Google",
-"AppData\Roaming\Mozilla"
+"AppData\Local\Google"
 
 ###############################################################################################################
 
@@ -31,24 +30,9 @@ Else
 	
 	foreach ($f in $folder)
 	{	
-		$currentLocalFolder = $userprofile + $f
+		$currentLocalFolder = $userprofile + "\" + $f
 		$currentRemoteFolder = $backupfolder + $f
-
-$GCI_Params = @{
-    ErrorAction = 'silentlyContinue'
-    Path = $currentLocalFolder
-    Recurse = $True
-    Force = $True
-    }
-$MO_Params = @{
-    ErrorAction = 'silentlyContinue'
-    Property = 'Length'
-    Sum = $True
-    }
-$currentFolderSize = (Get-ChildItem @GCI_Params |
-    Measure-Object @MO_Params ).
-    Sum / 1MB
-		robocopy $currentLocalFolder $currentRemoteFolder /E /XO /NP
+		robocopy $currentLocalFolder $currentRemoteFolder /E /XO /NP /LOG+:"$backupfolder\log.txt"
 	}
 }
 	
