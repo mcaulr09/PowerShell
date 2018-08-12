@@ -55,7 +55,7 @@ Exit
 # install application
 Clear-Host 
 Write-Host "Launching Setup..."
-Start-Process -FilePath $appsetup -Wait 
+Start-Process -Wait -FilePath $appsetup -ArgumentList "/s"
 $logstamp = (get-date).toString($timeFormat) ; $logstamp + " Launched setup" | out-file -filepath $localLog -Append
 $logstamp = (get-date).toString($timeFormat) ; $logstamp + " Exit code: " + $LastExitCode | out-file -filepath $localLog -Append
 
