@@ -57,8 +57,8 @@
   		$otherXpath = 'Event[System[({0})]]' -f "EventID=$(($ids.where({ $_ -ne '4624' })) -join ' or EventID=')" 
   		$xPath = '({0}) or ({1})' -f $logonXPath, $otherXpath 
   		 
-        $User = "daciangold\administrator"
-        $PWord = ConvertTo-SecureString -String "frzW8UF74kU2" -AsPlainText -Force
+        $User = "domain\administrator"
+        $PWord = ConvertTo-SecureString -String "Password" -AsPlainText -Force
         $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
 
   		$events = Get-WinEvent -ComputerName $ComputerName -LogName $logNames -FilterXPath $xPath -credential $Credential
